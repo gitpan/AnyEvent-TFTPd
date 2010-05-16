@@ -184,7 +184,7 @@ has server => (
 
 =head2 connected_at
 
-The time the connection was established. Epoch timestamp.
+The time the connection was established: Epoch timestamp.
 
 =cut
 
@@ -210,16 +210,34 @@ has packet_number => (
     },
 );
 
+=head2 last_seen_peer
+
+The last time data was received from the peer: Epoch timestamp.
+This value is used to calculate when to time out a connection.
+
+=cut
+
+has last_seen_peer => (
+    is => 'rw',
+    isa => 'Int',
+    default => -1,
+    trigger => sub { $_[0]->retries($_[0]->server->retries) },
+);
+
 =head2 retries
 
 The number of retries left before aborting the transmission.
+This number will be reset to L<AnyEvent::TFTPd::retries> each time
+L</last_seen_peer> is updated.
 
 =cut
 
 has retries => (
-    is => 'ro',
+    is => 'rw',
     isa => 'Int',
-    default => 0,
+    traits => ['Counter'],
+    lazy => 1,
+    default => sub { $_[0]->server->retries },
     handles => {
         dec_retries => 'dec',
     },
@@ -233,7 +251,7 @@ This method will send a packet of data from L</filehandle>
 to client, identified by L</peername>. The packet is calculated
 using the C<MIN_BLKSIZE> and L</packet_number>. Returns 1 on
 success, 2 if this is the last packet to be sent, 0 if something
-went wrong and -1 no more data is available from filehandle.
+went wrong and -1 if no more data is available from filehandle.
 
 =cut
 
@@ -267,6 +285,7 @@ sub send_packet {
         MSG_DONTWAIT,
         $self->peername,
     ) or do {
+        $self->dec_retries;
         $self->logf(error => 'Send %s: %s', $self->file, $!);
         return 0;
     };
@@ -295,9 +314,11 @@ sub receive_ack {
     if($n == $self->packet_number) {
         #$self->logf(trace => 'Received ack n=%i', $n);
         $self->inc_packet_number;
+        $self->last_seen_peer(time);
     }
     else {
         $self->logf(warn => 'Wrong packet number: %i != %i', $n, $self->packet_number);
+        $self->dec_retries;
     }
 
     return $self->send_packet;
@@ -325,6 +346,7 @@ sub receive_packet {
     }
     unless($n == $self->packet_number) {
         $self->logf(warn => 'Wrong packet number: %i != %i', $n, $self->packet_number);
+        $self->dec_retries;
         return $self->send_ack;
     }
 
@@ -336,6 +358,7 @@ sub receive_packet {
         return 0;
     };
 
+    $self->last_seen_peer(time);
     $self->inc_packet_number;
     #$self->logf(trace => 'Received packet n=%i', $n);
 
@@ -365,6 +388,7 @@ sub send_ack {
         $self->peername,
     ) or do {
         $self->logf(error => 'Send %s: %s', $self->file, $!);
+        $self->dec_retries;
         return 0;
     };
 
@@ -394,6 +418,7 @@ sub send_error {
         $self->peername,
     ) or do {
         $self->logf(error => 'Send error=%s: %s', $name, $!);
+        $self->dec_retries;
         return 0;
     };
 
@@ -402,10 +427,12 @@ sub send_error {
 
 =head2 logf
 
- $self->logf($connection_obj, @message);
+ $self->logf($level => @message);
 
-Receives internal log messages and (maybe) a connection object.
-Is meant to be overriden when subclassing this module.
+Receives a C<$level> and a list of strings, suitable for C<printf()>:
+The first element in C<@message> is a format and the rest (if exists) will
+be the replacement for C<%s> and friends in the format. The level has the
+same name as defined for L<Log::Log4perl>.
 
 =cut
 

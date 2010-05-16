@@ -7,17 +7,20 @@ use lib q(lib);
 #use EV; # 3
 #use POE; # 6
 #use Event; # 5.7
-use AnyEvent;
 use AnyEvent::TFTPd;
+use AnyEvent::TFTPd::CheckConnections;
 use Test::More;
 
 $AnyEvent::TFTPd::DEBUG = 1;
+AnyEvent::TFTPd::CheckConnections->meta->apply(AnyEvent::TFTPd->meta);
 
 my $tftpd = AnyEvent::TFTPd->new(
                 address => 'localhost',
                 port => 12345,
                 connection_class => 'AnyEvent::TFTPd::Connection',
                 max_connections => 10,
+                retries => 2,
+                timeout => 1,
             )->setup or die $@;
 
 print "tftpd-example.pl waits for connections...\n";

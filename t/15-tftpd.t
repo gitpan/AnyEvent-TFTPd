@@ -5,10 +5,11 @@ use AnyEvent;
 use AnyEvent::TFTPd;
 use Test::More;
 
-plan tests => 25;
-my($rbuf, $return_value);
+plan tests => 34;
+my $retries = 0;
+my(@log, $rbuf, $return_value);
 
-$AnyEvent::TFTPd::DEBUG = 0;
+$AnyEvent::TFTPd::DEBUG = 1;
 build_classes();
 
 my $s = AnyEvent::TFTPd->new(
@@ -97,16 +98,28 @@ my $s = AnyEvent::TFTPd->new(
 { # ERROR
     $return_value = 255;
     $rbuf = pack 'nnZ*', &AnyEvent::TFTPd::OPCODE_ERROR, 42, 'this is not the answer';
-    is($s->on_read($s->_handle), 0, 'on_read() received data without a connection');
+    is($s->on_read($s->_handle), 0, 'on_read() probably received data without a connection');
+    like($log[1], qr{not established}, 'on_read() received data without a connection');
 
     $rbuf = pack 'na*', &AnyEvent::TFTPd::OPCODE_WRQ, join("\0", 'x', 'y');
-    is($s->on_read($s->_handle), 1, 'on_read() created a connection');
+    is($s->get_all_connections, 0, 'server has no connections');
+    is($s->on_read($s->_handle), 1, 'on_read() probably created a connection');
+    is($s->get_all_connections, 1, 'on_read() created a connection');
 
     $rbuf = pack 'nnZ*', &AnyEvent::TFTPd::OPCODE_ERROR, 42, 'this is not the answer';
-    is($s->on_read($s->_handle), 1, 'on_read() received error');
+    is($s->on_read($s->_handle), 1, 'on_read() probably received error');
+    is($log[2], 42, 'on_read() has received error');
+    is($log[3], 'this is not the answer', 'on_read() has received error');
 
     $rbuf = pack 'nn', 42, 0;
-    is($s->on_read($s->_handle), 0, 'on_read() received unknown opcode');
+    is($s->on_read($s->_handle), 0, 'on_read() has probably received unknown opcode');
+    like($log[1], qr{Unknown opcode}, 'on_read() has received unknown opcode');
+
+    $retries = -1;
+    $rbuf = pack 'nna*', &AnyEvent::TFTPd::OPCODE_ERROR, 42, '';
+    is($s->on_read($s->_handle), 0, 'connection has probably exceeded retry limit');
+    like($log[1], qr{exceeded}, 'connection has exceeded retry limit');
+    is($s->get_all_connections, 0, 'server has no connections');
 }
 
 sub build_classes {
@@ -118,6 +131,8 @@ sub build_classes {
         sub send_ack { $return_value }
         sub send_error { 255 }
         sub receive_packet { shift->send_ack }
+        sub retries { $retries }
+        sub logf { shift; @log = @_ }
 
         package TestHandle;
         use Moose;

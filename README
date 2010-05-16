@@ -2,10 +2,16 @@ NAME
     AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 VERSION
-    0.10
+    0.11
 
 DESCRIPTION
-    This module handles TFTP request in an AnyEvent environment.
+    This module handles TFTP request in an AnyEvent environment. It will set
+    up a socket, handled by AnyEvent::Handle::UDP. Every time a new packet
+    has arrived, it will call "on_read()" which handles the request. The
+    rest is up to the AnyEvent::TFTPd::Connection object, which is possible
+    to customize either by subclassing or modifying with Moose.
+
+    Want timeout mechanism? See AnyEvent::TFTPd::CheckConnections.
 
 SYNOPSIS
      package My::AnyEvent::Connection;
@@ -20,8 +26,6 @@ SYNOPSIS
 
         return $filehandle;
      }
-
-     1;
 
      package main;
 
@@ -38,6 +42,12 @@ ATTRIBUTES
 
   port
     Holds the default port this server should listen to. Default is 69.
+
+  retries
+    This value will never be changes. It is used as default for the
+    AnyEvent::TFTPd::Connection::retries attribute.
+
+    Default number of retries are 3. (default value is subject for change)
 
   connection_class
     This string holds the classname where the connection objects should be

@@ -1,5 +1,18 @@
 Revision history for AnyEvent-TFTPd
 
+0.11     Sun May 16 18:26:03 CEST 2010
+       * Add support for retry
+         - add retries attribute to AnyEvent::TFTPd
+         - add retries attribute to AnyEvent::TFTPd::Connection
+         - on_read() checks number of retries
+         - various actions will decrease retries
+       * Add CheckConnections role for AnyEvent::TFTPd
+         - will decrease retry on timeout
+         - will remove connection when exhausted
+       * Add last_seen_peer attribute to AnyEvent::TFTPd::Connection
+       * Remove constants - replaced some with builders
+       * Fix typos in pod
+
 0.10     Sun May 16 12:40:18 CEST 2010
        * Add read/write
        * Add error handling both ways

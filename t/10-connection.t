@@ -4,7 +4,7 @@ use lib q(lib);
 use AnyEvent::TFTPd::Connection;
 use Test::More;
 
-plan tests => 33;
+plan tests => 37;
 
 my $e = \%AnyEvent::TFTPd::Connection::ERROR_CODES;
 my $port = 56789;
@@ -69,11 +69,13 @@ my $sent;
     $sent = '';
 
     is($c->receive_ack(pack 'n', 1), 2, 'received ack 1 and sent last packet again');
+    is($c->retries, 2, 'retries has decended');
     is(length $sent, 600 - 512 + 4, 'last packet received');
     $sent = '';
 
     is($c->receive_ack(pack 'n', 2), -1, 'received ack 2 on last packet');
     is($c->packet_number, 3, 'packet_number = 3 does not exist');
+    is($c->retries, 3, 'retries is restored');
     $sent = '';
 }
 
@@ -118,10 +120,12 @@ my $sent;
     is($recv, 'x' x 512, 'recv contains as expected');
 
     is($c->receive_packet(pack 'na*', 1, 'x' x 512), 1, 'received first packet again');
+    is($c->retries, 2, 'retries has decended');
     is($recv, 'x' x 512, 'recv contains the same data');
     $sent = '';
 
     is($c->receive_packet(pack 'na*', 2, 'x' x 42), -1, 'received second and last packet');
+    is($c->retries, 3, 'retries is restored');
     is($recv, 'x' x (512 + 42), 'recv contains the full data');
     is(
         $sent,
@@ -143,6 +147,7 @@ sub server_obj {
 
             package MockServer;
             sub socket { bless {}, 'MockSocket' }
+            sub retries { 3 }
 
             $sent = q();
 

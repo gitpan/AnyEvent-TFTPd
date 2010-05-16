@@ -6,11 +6,18 @@ AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 =head1 VERSION
 
-0.10
+0.11
 
 =head1 DESCRIPTION
 
-This module handles TFTP request in an L<AnyEvent> environment.
+This module handles TFTP request in an L<AnyEvent> environment. It
+will set up a socket, handled by L<AnyEvent::Handle::UDP>. Every time
+a new packet has arrived, it will call L</on_read()> which handles
+the request. The rest is up to the L<AnyEvent::TFTPd::Connection>
+object, which is possible to customize either by subclassing or
+modifying with L<Moose>.
+
+Want timeout mechanism? See L<AnyEvent::TFTPd::CheckConnections>.
 
 =head1 SYNOPSIS
 
@@ -26,8 +33,6 @@ This module handles TFTP request in an L<AnyEvent> environment.
 
     return $filehandle;
  }
-
- 1;
 
  package main;
 
@@ -45,11 +50,6 @@ use AnyEvent::Handle::UDP;
 use AnyEvent::TFTPd::Connection;
 use IO::Socket::INET;
 
-use constant MIN_BLKSIZE => 512;
-use constant MAX_BLKSIZE => 1428;
-use constant MIN_TIMEOUT => 1;
-use constant MAX_TIMEOUT => 60;
-use constant DEFAULT_PORT => 69;
 use constant OPCODE_RRQ => 1;
 use constant OPCODE_WRQ => 2;
 use constant OPCODE_DATA => 3;
@@ -57,7 +57,7 @@ use constant OPCODE_ACK => 4;
 use constant OPCODE_ERROR => 5;
 use constant OPCODE_OACK => 6;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 our $DEBUG = 0;
 
 =head1 ATTRIBUTES
@@ -71,8 +71,10 @@ Holds the address this server should bind to. Default is "127.0.0.1".
 has address => (
     is => 'ro',
     isa => 'Str',
-    default => '127.0.0.1',
+    builder => '_build_address',
 );
+
+sub _build_address { '127.0.0.1' }
 
 =head2 port
 
@@ -83,8 +85,27 @@ Holds the default port this server should listen to. Default is 69.
 has port => (
     is => 'ro',
     isa => 'Str',
-    default => sub { DEFAULT_PORT },
+    builder => '_build_port',
 );
+
+sub _build_port { 69 }
+
+=head2 retries
+
+This value will never be changes. It is used as default for the
+L<AnyEvent::TFTPd::Connection::retries> attribute.
+
+Default number of retries are 3. (default value is subject for change)
+
+=cut
+
+has retries => (
+    is => 'ro',
+    isa => 'Int',
+    builder => '_build_retries',
+);
+
+sub _build_retries { 3 }
 
 =head2 connection_class
 
@@ -170,7 +191,7 @@ sub _build__handle {
     
     return AnyEvent::Handle::UDP->new(
         listen => join(':', $self->address, $self->port),
-        read_size => MAX_BLKSIZE,
+        read_size => 1428, # or 512?
         on_error => sub { $self->on_error(@_) },
         on_read => sub { $self->on_read(@_) },
     );
@@ -190,6 +211,7 @@ Return value C<$self> allows you to chain C<new()> and C<setup()>.
 
 sub setup {
     my $self = shift;
+    my %args = @_; # used in CheckConnections
 
     eval {
         $self->_handle;
@@ -271,6 +293,12 @@ sub on_read {
     else {
         $connection->logf(error => 'Unknown opcode: %i', $opcode);
         $connection->send_error('unknown_opcode');
+        return 0;
+    }
+
+    if($connection->retries == -1) {
+        $connection->logf(error => 'Retries has exceeded');
+        $self->delete_connection($connection);
         return 0;
     }
 
