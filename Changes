@@ -1,0 +1,10 @@
+Revision history for AnyEvent-TFTPd
+
+0.10     Sun May 16 12:40:18 CEST 2010
+       * Add read/write
+       * Add error handling both ways
+       * Add max_connections
+       * Add optional custom connection_class
+       * Add connection cleanup on send/receive complete
+       * TODO: clean up timed out connections
+

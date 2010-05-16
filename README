@@ -1,0 +1,105 @@
+NAME
+    AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
+
+VERSION
+    0.10
+
+DESCRIPTION
+    This module handles TFTP request in an AnyEvent environment.
+
+SYNOPSIS
+     package My::AnyEvent::Connection;
+     use Moose;
+     extends 'AnyEvent::TFTPd::Connection';
+
+     sub _build_filehandle {
+        my $self = shift;
+        my $file = $self->file;
+
+        # ...
+
+        return $filehandle;
+     }
+
+     1;
+
+     package main;
+
+     my $tftpd = AnyEvent::TFTPd->new(
+                     address => 'localhost',
+                     port => 69,
+                     connection_class => 'My::AnyEvent::Connection',
+                     max_connections => 100,
+                 )->setup or die $@;
+
+ATTRIBUTES
+  address
+    Holds the address this server should bind to. Default is "127.0.0.1".
+
+  port
+    Holds the default port this server should listen to. Default is 69.
+
+  connection_class
+    This string holds the classname where the connection objects should be
+    constructed from. The default AnyEvent::TFTPd::Connection class is quite
+    useless without subclassing it. See "SYNOPSIS" for more details.
+
+  max_connections
+    The max concurrent connections this object can handle. Used inside
+    "on_connect()" to decide if a new connection should be establised or
+    not.
+
+    Setting this to zero (the default) means that the server should handle
+    unlimited connections.
+
+  _connections
+     $connection_obj = $self->get_connection(peername);
+     $connection_obj = $self->add_connection($connection_obj);
+     @connections = $self->get_all_connections;
+
+    This attribute holds a hash-ref, where the keys are "peername()" of the
+    connections, and the values point to AnyEvent::TFTPd::Connection
+    objects. Use the delegated methods listed above to access this
+    attribute.
+
+  _handle
+     $io_socket_inet = $self->socket;
+     $packed = $self->peername;
+
+    This attribute holds an instance of AnyEvent::Handle::UDP, which handles
+    the methods listed above.
+
+METHODS
+  setup
+    This method will prepare the handle/socket for incoming connections. It
+    will return c<$self> on success and 0 on failure. Check $@ for a full
+    error message on failure.
+
+    Return value $self allows you to chain "new()" and "setup()".
+
+  on_read
+    This hook is called each time data is received from a peer host. It will
+    parse the datagram received and act accordingly.
+
+  on_connect
+    This method returns a new AnyEvent::TFTPd::Connection object for a new
+    connection. This method is called when either a RRQ/WRQ opcode is
+    received in "on_read()".
+
+    This method might skip these steps if no more connections are available.
+    This is computed by comparing the number of connections and
+    "max_connections".
+
+  on_error
+    This hook is called from the handler, when something unexpected has
+    happened. See AnyEvent::Handle for details.
+
+COPYRIGHT & LICENSE
+    Copyright 2007 Jan Henning Thorsen, all rights reserved.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+AUTHOR
+    Jan Henning Thorsen "jhthorsen at cpan.org"
+
