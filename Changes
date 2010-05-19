@@ -1,5 +1,10 @@
 Revision history for AnyEvent-TFTPd
 
+0.12     Wed May 19 11:57:20 CEST 2010
+       * Fix Makefile.PL: Missing dependecies
+       * More builders
+       * Add lazy_build to attributes
+
 0.11     Sun May 16 18:26:03 CEST 2010
        * Add support for retry
          - add retries attribute to AnyEvent::TFTPd

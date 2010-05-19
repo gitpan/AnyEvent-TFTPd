@@ -2,7 +2,7 @@ NAME
     AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 VERSION
-    0.11
+    0.12
 
 DESCRIPTION
     This module handles TFTP request in an AnyEvent environment. It will set

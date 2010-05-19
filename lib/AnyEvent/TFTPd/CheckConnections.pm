@@ -45,8 +45,10 @@ has timeout => (
     is => 'ro',
     isa => 'Int',
     writer => '_set_timeout',
-    default => 3,
+    lazy_build => 1,
 );
+
+sub _build_timeout { 3 }
 
 has _check_connection_timer => (
     is => 'ro',

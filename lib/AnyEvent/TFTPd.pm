@@ -6,7 +6,7 @@ AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 =head1 VERSION
 
-0.11
+0.12
 
 =head1 DESCRIPTION
 
@@ -57,7 +57,7 @@ use constant OPCODE_ACK => 4;
 use constant OPCODE_ERROR => 5;
 use constant OPCODE_OACK => 6;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 our $DEBUG = 0;
 
 =head1 ATTRIBUTES
@@ -71,7 +71,7 @@ Holds the address this server should bind to. Default is "127.0.0.1".
 has address => (
     is => 'ro',
     isa => 'Str',
-    builder => '_build_address',
+    lazy_build => 1,
 );
 
 sub _build_address { '127.0.0.1' }
@@ -85,7 +85,7 @@ Holds the default port this server should listen to. Default is 69.
 has port => (
     is => 'ro',
     isa => 'Str',
-    builder => '_build_port',
+    lazy_build => 1,
 );
 
 sub _build_port { 69 }
@@ -102,7 +102,7 @@ Default number of retries are 3. (default value is subject for change)
 has retries => (
     is => 'ro',
     isa => 'Int',
-    builder => '_build_retries',
+    lazy_build => 1,
 );
 
 sub _build_retries { 3 }
@@ -135,8 +135,10 @@ unlimited connections.
 has max_connections => (
     is => 'ro',
     isa => 'Int',
-    default => 0,
+    lazy_build => 1,
 );
+
+sub _build_max_connections { 0 }
 
 =head2 _connections
 
