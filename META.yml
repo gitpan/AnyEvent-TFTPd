@@ -27,4 +27,4 @@ resources:
   homepage: http://search.cpan.org/dist/AnyEvent-TFTPd
   license: http://dev.perl.org/licenses/
   repository: git://github.com/jhthorsen/anyevent-tftpd.git
-version: 0.12
+version: 0.13

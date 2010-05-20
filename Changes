@@ -1,5 +1,8 @@
 Revision history for AnyEvent-TFTPd
 
+0.13     Fri May 21 00:09:50 CEST 2010
+       * Decided to leave AnyEvent
+
 0.12     Wed May 19 11:57:20 CEST 2010
        * Fix Makefile.PL: Missing dependecies
        * More builders
