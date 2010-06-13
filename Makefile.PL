@@ -14,5 +14,5 @@ homepage q(http://search.cpan.org/dist/AnyEvent-TFTPd);
 repository q(git://github.com/jhthorsen/anyevent-tftpd.git);
 
 # install_script glob('bin/*');
-auto_install;
+# auto_install;
 WriteAll;

@@ -2,13 +2,21 @@ NAME
     AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 VERSION
-    0.13
+    0.1301
 
 DESCRIPTION
     I suddenly decided to leave any AnyEvent code (including
     AnyEvent::Handle::UDP), due to a community and development model that is
     indeed very hard to work with. If you want this module, please drop me
     mail and I'll hand over the maintenance.
+
+    Update: AnyEvent::Handle states:
+
+        # too many clueless people try to use udp and similar sockets
+        # with AnyEvent::Handle, do them a favour.
+
+    So instead of hacking the source of AnyEvent I'm simply abandoning this
+    ship.
 
     This module handles TFTP request in an AnyEvent environment. It will set
     up a socket, handled by AnyEvent::Handle::UDP. Every time a new packet

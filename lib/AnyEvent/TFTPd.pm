@@ -6,7 +6,7 @@ AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 =head1 VERSION
 
-0.13
+0.1301
 
 =head1 DESCRIPTION
 
@@ -14,6 +14,14 @@ I suddenly decided to leave any L<AnyEvent> code (including
 L<AnyEvent::Handle::UDP>), due to a community and development model
 that is indeed very hard to work with. If you want this module, please
 drop me mail and I'll hand over the maintenance.
+
+Update: L<AnyEvent::Handle> states:
+
+    # too many clueless people try to use udp and similar sockets
+    # with AnyEvent::Handle, do them a favour.
+
+So instead of hacking the source of AnyEvent I'm simply abandoning this
+ship.
 
 This module handles TFTP request in an L<AnyEvent> environment. It
 will set up a socket, handled by L<AnyEvent::Handle::UDP>. Every time
@@ -62,7 +70,7 @@ use constant OPCODE_ACK => 4;
 use constant OPCODE_ERROR => 5;
 use constant OPCODE_OACK => 6;
 
-our $VERSION = '0.13';
+our $VERSION = '0.1301';
 our $DEBUG = 0;
 
 =head1 ATTRIBUTES

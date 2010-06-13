@@ -1,5 +1,8 @@
 Revision history for AnyEvent-TFTPd
 
+0.1301   Sun Jun 13 18:32:21 CEST 2010
+       * Code got sabotaged
+
 0.13     Fri May 21 00:09:50 CEST 2010
        * Decided to leave AnyEvent
 
