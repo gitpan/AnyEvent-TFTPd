@@ -6,7 +6,7 @@ AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 =head1 VERSION
 
-0.1302
+0.1303
 
 =head1 DESCRIPTION
 
@@ -70,7 +70,7 @@ use constant OPCODE_ACK => 4;
 use constant OPCODE_ERROR => 5;
 use constant OPCODE_OACK => 6;
 
-our $VERSION = eval '0.1302';
+our $VERSION = eval '0.1303';
 our $DEBUG = 0;
 
 =head1 ATTRIBUTES

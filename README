@@ -2,7 +2,7 @@ NAME
     AnyEvent::TFTPd - Trivial File Transfer Protocol daemon
 
 VERSION
-    0.1302
+    0.1303
 
 DESCRIPTION
     I suddenly decided to leave any AnyEvent code (including
